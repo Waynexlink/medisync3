@@ -1,6 +1,7 @@
 require("dotenv").config();
 const express = require("express");
 const connectDB = require("./config/database");
+const authRoutes = require("./routes/authRoutes");
 
 const app = express();
 
@@ -9,6 +10,8 @@ connectDB();
 
 // Middleware to parse JSON bodies
 app.use(express.json());
+
+app.use("/api/auth", authRoutes);
 
 // A simple root route for testing
 app.get("/", (req, res) => {
