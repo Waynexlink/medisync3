@@ -2,6 +2,7 @@ require("dotenv").config();
 const express = require("express");
 const connectDB = require("./config/database");
 const authRoutes = require("./routes/authRoutes");
+const medicationRoutes = require("./routes/medicationRoutes");
 
 const app = express();
 
@@ -12,6 +13,7 @@ connectDB();
 app.use(express.json());
 
 app.use("/api/auth", authRoutes);
+app.use("/api/medications", medicationRoutes);
 
 // A simple root route for testing
 app.get("/", (req, res) => {
