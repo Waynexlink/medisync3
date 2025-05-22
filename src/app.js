@@ -3,6 +3,8 @@ const express = require("express");
 const connectDB = require("./config/database");
 const authRoutes = require("./routes/authRoutes");
 const medicationRoutes = require("./routes/medicationRoutes");
+const adherenceRoutes = require("./routes/adherenceRoutes");
+const sideEffectsRoutes = require("./routes/sideEffectsRoutes");
 
 const app = express();
 
@@ -14,6 +16,8 @@ app.use(express.json());
 
 app.use("/api/auth", authRoutes);
 app.use("/api/medications", medicationRoutes);
+app.use("/api/adherence", adherenceRoutes);
+app.use("/api/side-effects", sideEffectsRoutes);
 
 // A simple root route for testing
 app.get("/", (req, res) => {
