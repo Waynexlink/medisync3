@@ -45,6 +45,8 @@ app.use("/api/reports", reportRoutes);
 
 // Import auth controller for page routes
 const authController = require("../src/controllers/authController");
+const medicationController = require("../src/controllers/medicationController");
+const sideEffectController = require("../src/controllers/sideEffectController");
 
 // Page routes (frontend)
 app.get("/login", authController.showLoginPage);
@@ -61,6 +63,40 @@ app.get("/dashboard", authController.requireAuth, (req, res) => {
     patientName: req.session.patientName || "User",
   });
 });
+
+// Medication pages
+app.get(
+  "/medications",
+  authController.requireAuth,
+  medicationController.showMedicationsPage
+);
+app.get(
+  "/add-medication",
+  authController.requireAuth,
+  medicationController.showAddMedicationPage
+);
+app.post(
+  "/add-medication",
+  authController.requireAuth,
+  medicationController.addMedicationEJS
+);
+
+// Side effect pages
+app.get(
+  "/side-effects",
+  authController.requireAuth,
+  sideEffectController.showSideEffectsPage
+);
+app.get(
+  "/log-side-effect",
+  authController.requireAuth,
+  sideEffectController.showLogSideEffectPage
+);
+app.post(
+  "/log-side-effect",
+  authController.requireAuth,
+  sideEffectController.logSideEffectEJS
+);
 
 // Root route - ONLY ONE
 app.get("/", (req, res) => {

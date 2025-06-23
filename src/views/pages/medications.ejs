@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title><%= title %></title>
+    <script src="https://cdn.tailwindcss.com"></script>
+  </head>
+  <body class="bg-gray-50">
+    <div class="min-h-screen">
+      <!-- Header -->
+      <header class="bg-white shadow">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div class="flex justify-between h-16">
+            <div class="flex items-center space-x-4">
+              <a
+                href="/dashboard"
+                class="text-xl font-semibold text-gray-900 hover:text-gray-700"
+                >MedSync</a
+              >
+              <span class="text-gray-400">|</span>
+              <h1 class="text-lg text-gray-600">My Medications</h1>
+            </div>
+            <div class="flex items-center space-x-4">
+              <a
+                href="/dashboard"
+                class="text-sm text-gray-600 hover:text-gray-900"
+                >Dashboard</a
+              >
+              <a href="/logout" class="text-sm text-red-600 hover:text-red-500"
+                >Logout</a
+              >
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <!-- Main Content -->
+      <main class="max-w-4xl mx-auto py-6 sm:px-6 lg:px-8">
+        <div class="px-4 py-6 sm:px-0">
+          <div class="flex justify-between items-center mb-6">
+            <h2 class="text-2xl font-bold text-gray-900">My Medications</h2>
+            <a
+              href="/add-medication"
+              class="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500"
+            >
+              Add New Medication
+            </a>
+          </div>
+
+          <!-- Error Message -->
+          <% if (error) { %>
+          <div
+            class="mb-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded"
+          >
+            <%= error %>
+          </div>
+          <% } %>
+
+          <!-- Medications List -->
+          <% if (medications.length === 0) { %>
+          <div class="bg-white shadow rounded-lg">
+            <div class="px-4 py-12 text-center">
+              <svg
+                class="mx-auto h-12 w-12 text-gray-400"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"
+                />
+              </svg>
+              <h3 class="mt-2 text-sm font-medium text-gray-900">
+                No medications
+              </h3>
+              <p class="mt-1 text-sm text-gray-500">
+                Get started by adding your first medication.
+              </p>
+              <div class="mt-6">
+                <a
+                  href="/add-medication"
+                  class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700"
+                >
+                  Add Medication
+                </a>
+              </div>
+            </div>
+          </div>
+          <% } else { %>
+          <div class="bg-white shadow overflow-hidden sm:rounded-md">
+            <ul class="divide-y divide-gray-200">
+              <% medications.forEach(function(medication) { %>
+              <li class="px-6 py-4">
+                <div class="flex items-center justify-between">
+                  <div class="flex-1">
+                    <div class="flex items-center justify-between">
+                      <h3 class="text-lg font-medium text-gray-900">
+                        <%= medication.name %>
+                      </h3>
+                      <div class="ml-2 flex-shrink-0 flex">
+                        <span
+                          class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800"
+                        >
+                          Active
+                        </span>
+                      </div>
+                    </div>
+                    <% if (medication.dosage) { %>
+                    <p class="mt-1 text-sm text-gray-600">
+                      <%= medication.dosage %>
+                    </p>
+                    <% } %>
+                    <div class="mt-2">
+                      <p class="text-sm text-gray-500">
+                        <strong>Schedule:</strong>
+                        <% if (Array.isArray(medication.schedule)) { %> <%=
+                        medication.schedule.join(', ') %> <% } else { %> <%=
+                        medication.schedule %> <% } %>
+                      </p>
+                    </div>
+                    <p class="mt-1 text-xs text-gray-400">
+                      Added on <%= new
+                      Date(medication.startDate).toLocaleDateString() %>
+                    </p>
+                  </div>
+                </div>
+              </li>
+              <% }); %>
+            </ul>
+          </div>
+          <% } %>
+        </div>
+      </main>
+    </div>
+  </body>
+</html>

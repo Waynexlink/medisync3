@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title><%= title %></title>
+    <script src="https://cdn.tailwindcss.com"></script>
+  </head>
+  <body class="bg-gray-50">
+    <div class="min-h-screen">
+      <!-- Header -->
+      <header class="bg-white shadow">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div class="flex justify-between h-16">
+            <div class="flex items-center space-x-4">
+              <a
+                href="/dashboard"
+                class="text-xl font-semibold text-gray-900 hover:text-gray-700"
+                >MedSync</a
+              >
+              <span class="text-gray-400">|</span>
+              <h1 class="text-lg text-gray-600">Side Effects History</h1>
+            </div>
+            <div class="flex items-center space-x-4">
+              <a
+                href="/dashboard"
+                class="text-sm text-gray-600 hover:text-gray-900"
+                >Dashboard</a
+              >
+              <a href="/logout" class="text-sm text-red-600 hover:text-red-500"
+                >Logout</a
+              >
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <!-- Main Content -->
+      <main class="max-w-4xl mx-auto py-6 sm:px-6 lg:px-8">
+        <div class="px-4 py-6 sm:px-0">
+          <div class="flex justify-between items-center mb-6">
+            <h2 class="text-2xl font-bold text-gray-900">
+              Side Effects History
+            </h2>
+            <a
+              href="/log-side-effect"
+              class="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500"
+            >
+              Log New Side Effect
+            </a>
+          </div>
+
+          <!-- Error Message -->
+          <% if (error) { %>
+          <div
+            class="mb-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded"
+          >
+            <%= error %>
+          </div>
+          <% } %>
+
+          <!-- Side Effects List -->
+          <% if (sideEffects.length === 0) { %>
+          <div class="bg-white shadow rounded-lg">
+            <div class="px-4 py-12 text-center">
+              <svg
+                class="mx-auto h-12 w-12 text-gray-400"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                />
+              </svg>
+              <h3 class="mt-2 text-sm font-medium text-gray-900">
+                No side effects logged
+              </h3>
+              <p class="mt-1 text-sm text-gray-500">
+                You haven't logged any side effects yet.
+              </p>
+              <div class="mt-6">
+                <a
+                  href="/log-side-effect"
+                  class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700"
+                >
+                  Log Side Effect
+                </a>
+              </div>
+            </div>
+          </div>
+          <% } else { %>
+          <div class="bg-white shadow overflow-hidden sm:rounded-md">
+            <ul class="divide-y divide-gray-200">
+              <% sideEffects.forEach(function(sideEffect) { %>
+              <li class="px-6 py-4">
+                <div class="flex items-start justify-between">
+                  <div class="flex-1">
+                    <div class="flex items-center justify-between">
+                      <div class="flex items-center">
+                        <span
+                          class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full <% if (sideEffect.severity === 'Mild') { %> bg-green-100 text-green-800 <% } else if (sideEffect.severity === 'Moderate') { %> bg-yellow-100 text-yellow-800 <% } else if (sideEffect.severity === 'Severe') { %> bg-red-100 text-red-800 <% } else { %> bg-gray-100 text-gray-800 <% } %>"
+                        >
+                          <%= sideEffect.severity || 'Not specified' %>
+                        </span>
+                      </div>
+                      <p class="text-sm text-gray-500">
+                        <%= new Date(sideEffect.date).toLocaleDateString() %> at
+                        <%= new Date(sideEffect.date).toLocaleTimeString() %>
+                      </p>
+                    </div>
+                    <div class="mt-2">
+                      <p class="text-sm text-gray-900">
+                        <%= sideEffect.description %>
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </li>
+              <% }); %>
+            </ul>
+          </div>
+          <% } %>
+        </div>
+      </main>
+    </div>
+  </body>
+</html>
