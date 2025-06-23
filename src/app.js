@@ -1,6 +1,9 @@
 require("dotenv").config();
 const express = require("express");
+const path = require("path");
 const connectDB = require("./config/database");
+const cron = require("node-cron");
+const cors = require("cors");
 const authRoutes = require("./routes/authRoutes");
 const medicationRoutes = require("./routes/medicationRoutes");
 const adherenceRoutes = require("./routes/adherenceRoutes");
@@ -9,28 +12,71 @@ const reportRoutes = require("./routes/reportRoutes");
 
 const app = express();
 
-//connect to database
+// Views engine
+app.set("view engine", "ejs");
+app.set("views", path.join(__dirname, "views"));
+app.use(express.static("public"));
+
+// Connect to database
 connectDB();
 
-// Middleware to parse JSON bodies
+// Middleware
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use(cors());
 
+// Session middleware
+const session = require("express-session");
+app.use(
+  session({
+    secret: "your-secret-key",
+    resave: false,
+    saveUninitialized: false,
+    cookie: { secure: false },
+  })
+);
+
+// API Routes (keep these)
 app.use("/api/auth", authRoutes);
 app.use("/api/medications", medicationRoutes);
 app.use("/api/adherence", adherenceRoutes);
 app.use("/api/side-effects", sideEffectsRoutes);
 app.use("/api/reports", reportRoutes);
 
-// A simple root route for testing
-app.get("/", (req, res) => {
-  res
-    .status(200)
-    .json({ message: "Welcome to the Medication Management API!" });
+// Import auth controller for page routes
+const authController = require("../src/controllers/authController");
+
+// Page routes (frontend)
+app.get("/login", authController.showLoginPage);
+app.get("/register", authController.showRegisterPage);
+app.get("/logout", authController.logout);
+
+// Form processing routes (frontend)
+app.post("/register", authController.registerPatient);
+app.post("/login", authController.loginPatient);
+
+app.get("/dashboard", authController.requireAuth, (req, res) => {
+  res.render("pages/dashboard", {
+    title: "Dashboard - MedSync",
+    patientName: req.session.patientName || "User",
+  });
 });
-//crone schedule
+
+// Root route - ONLY ONE
+app.get("/", (req, res) => {
+  if (req.session.patientId) {
+    res.redirect("/dashboard");
+  } else {
+    res.redirect("/login");
+  }
+});
+
+// Cron schedule
 cron.schedule("0 0 * * 0", async () => {
   console.log("Running weekly report generation and email task...");
   try {
+    const Patient = require("./src/models/Patient");
+    const reportService = require("./src/services/reportService");
     const allPatients = await Patient.find();
     for (const patient of allPatients) {
       await reportService.sendWeeklyReportEmail(patient._id);
@@ -41,12 +87,10 @@ cron.schedule("0 0 * * 0", async () => {
   }
 });
 
-// Define a port
 const PORT = process.env.PORT || 3000;
 
-// Start the server
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
 
-module.exports = app; // Export for potential testing later
+module.exports = app;

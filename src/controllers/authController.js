@@ -1,6 +1,23 @@
 const Patient = require("../models/Patient");
 const bcrypt = require("bcrypt");
 
+// Render login page
+exports.showLoginPage = (req, res) => {
+  res.render("pages/login", {
+    title: "Login - MedSync",
+    error: null,
+  });
+};
+
+// Render registration page
+exports.showRegisterPage = (req, res) => {
+  res.render("pages/register", {
+    title: "Register - MedSync",
+    error: null,
+  });
+};
+
+// Process registration form
 exports.registerPatient = async (req, res) => {
   try {
     const { firstName, lastName, email, password } = req.body;
@@ -8,9 +25,10 @@ exports.registerPatient = async (req, res) => {
     // Check if the patient already exists
     let patient = await Patient.findOne({ email });
     if (patient) {
-      return res
-        .status(400)
-        .json({ errors: [{ msg: "Patient already exists" }] });
+      return res.render("pages/register", {
+        title: "Register - MedSync",
+        error: "Patient already exists",
+      });
     }
 
     // Create a new patient instance
@@ -28,15 +46,22 @@ exports.registerPatient = async (req, res) => {
     // Save the patient to the database
     await patient.save();
 
-    // For now, let's just send a success message.
-    // In a real application, you might generate a JWT here for authentication.
-    res.status(201).json({ message: "Registration successful" });
+    // Redirect to login with success message
+    res.render("pages/login", {
+      title: "Login - MedSync",
+      success: "Registration successful! Please login.",
+      error: null,
+    });
   } catch (err) {
     console.error(err.message);
-    res.status(500).send("Server error");
+    res.render("pages/register", {
+      title: "Register - MedSync",
+      error: "Server error occurred",
+    });
   }
 };
 
+// Process login form
 exports.loginPatient = async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -44,35 +69,67 @@ exports.loginPatient = async (req, res) => {
     // Check if the patient exists
     const patient = await Patient.findOne({ email });
     if (!patient) {
-      return res.status(400).json({ errors: [{ msg: "Invalid credentials" }] });
+      return res.render("pages/login", {
+        title: "Login - MedSync",
+        error: "Invalid credentials",
+      });
     }
 
     // Compare the provided password with the stored hashed password
     const isMatch = await bcrypt.compare(password, patient.password);
 
     if (!isMatch) {
-      return res.status(400).json({ errors: [{ msg: "Invalid credentials" }] });
+      return res.render("pages/login", {
+        title: "Login - MedSync",
+        error: "Invalid credentials",
+      });
     }
 
-    // For now, let's just send a success message with the patient's ID.
-    // In a real application, you would generate and send a JWT here.
-    res.json({ message: "Login successful", patientId: patient._id });
+    // Store patient info in session
+    req.session.patientId = patient._id;
+    req.session.patientName = `${patient.firstName} ${patient.lastName}`;
+
+    // Redirect to dashboard
+    res.redirect("/dashboard");
   } catch (err) {
     console.error(err.message);
-    res.status(500).send("Server error");
+    res.render("pages/login", {
+      title: "Login - MedSync",
+      error: "Server error occurred",
+    });
   }
 };
 
+// Logout
+exports.logout = (req, res) => {
+  req.session.destroy((err) => {
+    if (err) {
+      console.error(err);
+    }
+    res.redirect("/login");
+  });
+};
+
+// Middleware to check if user is logged in
+exports.requireAuth = (req, res, next) => {
+  if (req.session.patientId) {
+    next();
+  } else {
+    res.redirect("/login");
+  }
+};
+
+// Keep this for AJAX calls (updating clinician email)
 exports.updateClinicianEmail = async (req, res) => {
   try {
     const { clinicianEmail } = req.body;
-    const patientId = req.body.patientId; // Assuming patientId is in the body
+    const patientId = req.session.patientId; // Get from session instead
 
-    // Basic validation for email format (you might want a more robust check)
     if (clinicianEmail && !/\S+@\S+\.\S+/.test(clinicianEmail)) {
-      return res
-        .status(400)
-        .json({ errors: [{ msg: "Invalid clinician email format." }] });
+      return res.status(400).json({
+        success: false,
+        message: "Invalid clinician email format.",
+      });
     }
 
     const patient = await Patient.findByIdAndUpdate(
@@ -81,31 +138,26 @@ exports.updateClinicianEmail = async (req, res) => {
         clinicianEmail: clinicianEmail
           ? clinicianEmail.toLowerCase().trim()
           : null,
-      }, // Store as lowercase and trim whitespace
-      { new: true } // Return the modified document
+      },
+      { new: true }
     );
 
     if (!patient) {
-      return res.status(404).json({ errors: [{ msg: "Patient not found." }] });
+      return res.status(404).json({
+        success: false,
+        message: "Patient not found.",
+      });
     }
 
-    res.json({ message: "Clinician email updated successfully", patient });
+    res.json({
+      success: true,
+      message: "Clinician email updated successfully",
+    });
   } catch (err) {
     console.error(err.message);
-    res.status(500).send("Server error");
-  }
-};
-
-exports.getPatientProfile = async (req, res) => {
-  try {
-    const patientId = req.params.patientId;
-    const patient = await Patient.findById(patientId).select("-password"); // Exclude password from the response
-    if (!patient) {
-      return res.status(404).json({ errors: [{ msg: "Patient not found." }] });
-    }
-    res.json(patient);
-  } catch (err) {
-    console.error(err.message);
-    res.status(500).send("Server error");
+    res.status(500).json({
+      success: false,
+      message: "Server error",
+    });
   }
 };
